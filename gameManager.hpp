@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include "math.h"
 #include <iostream>
 #include <vector>
 
@@ -39,7 +40,17 @@ namespace grid{
             / GRID_SIZE};
     }
 
-    // template <typename T>
+    template <typename T>
+    int getCircleClosestToMouseIndex(std::vector<T> objects){ // return -1 if nothing inside mouse
+        for(size_t i = 0; i < objects.size(); i++){
+            if(pow((GetMouseX() - objects[i].getCoords().x), 2) + 
+            pow((GetMouseY() - objects[i].getCoords().y), 2) < pow(objects[i].RADIUS, 2)){
+                return i;
+            }
+        }
+        return -1;
+    }
+    
 };
 
 namespace gameTime{
@@ -61,16 +72,12 @@ class InternalClock{
     }
 };
 
-class Coordinates{ // this class is used solely to store coords
+class Object{ 
     private:
     Vector2 coords;
+    // int radius; radius should be a static variable for different classes
 
     public:
-    Coordinates(float x, float y){
-        this->coords.x = x;
-        this->coords.y = y;
-    }
-
     void setx(float x){
         this->coords.x = x;
     }
@@ -79,11 +86,11 @@ class Coordinates{ // this class is used solely to store coords
         this->coords.y = y;
     }
 
-    void set(Vector2 coords){
+    void setCoords(Vector2 coords){
         this->coords = coords;
     }
     
-    Vector2 get(){
+    Vector2 getCoords(){
         return coords;
     }
 }; 
@@ -112,54 +119,62 @@ namespace sun{
         }
     };
 
-    class Sun{
+    class Sun : public Object{
         private:
-        Coordinates finalCoords{0, 0};
-        Coordinates currentCoords{0, 0};
-        
-        void drawSun(){
-            DrawCircle(currentCoords.get().x, currentCoords.get().y, RADIUS, YELLOW);
-        }
-        
-        void dropSun(){
-            if(currentCoords.get().y <= finalCoords.get().y){
-                currentCoords.sety(currentCoords.get().y + DROP_SPEED);
-            }
-        }
+        Vector2 finalCoords = {0, 0};
 
         public:
         InternalClock clock; 
-        
         static const int DROP_COOLDOWN = 5  * gameTime::EXPECTED_FPS;// FPS
         static const int DROP_SPEED = 10;
         static const int RADIUS = 16; // Dropped sun's radius, not the radius displayed in sunBank
         
-        void startClock(){
-            clock.setState(true);
-            finalCoords.setx(GetRandomValue(grid::FIRST_SQUARE_X, grid::FIRST_SQUARE_X + grid::COLUMN * grid::GRID_SIZE));
-            finalCoords.sety(GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::COLUMN * grid::GRID_SIZE));
-            currentCoords.setx(finalCoords.get().x);
-            currentCoords.sety(RADIUS);
+        Sun(){
+            finalCoords.x = GetRandomValue(grid::FIRST_SQUARE_X, grid::FIRST_SQUARE_X + grid::COLUMN * grid::GRID_SIZE);
+            finalCoords.y = GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::COLUMN * grid::GRID_SIZE);
+            setx(finalCoords.x);
+            sety(RADIUS);
         }
 
+        void startClock(){
+            clock.setState(true);
+        }
+        
         void mainLoop(){
             if(clock.getState()){
                 drawSun();
                 dropSun();
             }
         }
+
+        private:
+        
+        void drawSun(){
+            DrawCircle(getCoords().x, getCoords().y, RADIUS, YELLOW);
+        }
+        
+        void dropSun(){
+            if(getCoords().y <= finalCoords.y){
+                sety(getCoords().y + DROP_SPEED);
+            }
+        }
     };
+    
 
     void sunsMainLoop(const int TIME, std::vector<Sun>& suns){
+        int index = grid::getCircleClosestToMouseIndex(suns);
         for(size_t i = 0; i < suns.size(); i++){
             suns[i].mainLoop();
         }
         if(TIME % sun::Sun::DROP_COOLDOWN == 0){
             suns[0].startClock();
         }
-
+        if(index != -1){
+            std::cout << "mouse is on " << index << '\n';
+        }
     }
 };
+
 
 void mainLoop(const int TIME, sun::SunBank& sunBank, std::vector<sun::Sun>& suns){ // ONLY CALL THIS FUNCTION
     grid::drawGrid();
@@ -167,6 +182,7 @@ void mainLoop(const int TIME, sun::SunBank& sunBank, std::vector<sun::Sun>& suns
     sun::sunsMainLoop(TIME, suns);
     if(IsKeyDown(KEY_S)){
         std::string out; 
+
         DrawText(out.c_str(), 500, 500, 100, RED);
     }
 }
