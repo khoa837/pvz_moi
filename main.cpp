@@ -6,11 +6,11 @@ int main () {
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "My first RAYLIB program!");
-    SetTargetFPS(60);
+    SetTargetFPS(gameConstants::EXPECTED_FPS);
 
     int time = 0;
     sun::SunBank sunBank;
-    std::vector<sun::Sun> sun(1);
+    std::vector<sun::Sun> sun(gameConstants::STANDARD_VECTOR_SIZE);
     while (WindowShouldClose() == false){
         BeginDrawing();
         ClearBackground(WHITE);

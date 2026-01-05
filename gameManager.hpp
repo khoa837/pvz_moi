@@ -43,9 +43,11 @@ namespace grid{
     template <typename T>
     int getCircleClosestToMouseIndex(std::vector<T> objects){ // return -1 if nothing inside mouse
         for(size_t i = 0; i < objects.size(); i++){
-            if(pow((GetMouseX() - objects[i].getCoords().x), 2) + 
-            pow((GetMouseY() - objects[i].getCoords().y), 2) < pow(objects[i].RADIUS, 2)){
-                return i;
+            if(objects[i].clock.getState() == 1){
+                if(pow((GetMouseX() - objects[i].getCoords().x), 2) + 
+                pow((GetMouseY() - objects[i].getCoords().y), 2) < pow(objects[i].RADIUS, 2)){
+                    return i;
+                }
             }
         }
         return -1;
@@ -53,8 +55,9 @@ namespace grid{
     
 };
 
-namespace gameTime{
+namespace gameConstants{
     const int EXPECTED_FPS = 60;
+    const int STANDARD_VECTOR_SIZE = 1;
 };
 
 class InternalClock{
@@ -96,6 +99,8 @@ class Object{
 }; 
 
 namespace sun{
+    const int VALUE = 50;
+
     class SunBank{
         private:
         unsigned int total = 200;
@@ -125,30 +130,36 @@ namespace sun{
 
         public:
         InternalClock clock; 
-        static const int DROP_COOLDOWN = 5  * gameTime::EXPECTED_FPS;// FPS
+        static const int DROP_COOLDOWN = 1  * gameConstants::EXPECTED_FPS;// FPS
         static const int DROP_SPEED = 10;
         static const int RADIUS = 16; // Dropped sun's radius, not the radius displayed in sunBank
         
         Sun(){
             finalCoords.x = GetRandomValue(grid::FIRST_SQUARE_X, grid::FIRST_SQUARE_X + grid::COLUMN * grid::GRID_SIZE);
-            finalCoords.y = GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::COLUMN * grid::GRID_SIZE);
+            finalCoords.y = GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::ROW * grid::GRID_SIZE);
             setx(finalCoords.x);
-            sety(RADIUS);
+            sety(-RADIUS);
         }
 
         void startClock(){
             clock.setState(true);
         }
         
+        void resetClock(){
+            clock.setState(false);
+            finalCoords.x = GetRandomValue(grid::FIRST_SQUARE_X, grid::FIRST_SQUARE_X + grid::COLUMN * grid::GRID_SIZE);
+            finalCoords.y = GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::ROW * grid::GRID_SIZE);
+            setx(finalCoords.x);
+            sety(-RADIUS);
+        }
+
         void mainLoop(){
             if(clock.getState()){
                 drawSun();
                 dropSun();
             }
         }
-
         private:
-        
         void drawSun(){
             DrawCircle(getCoords().x, getCoords().y, RADIUS, YELLOW);
         }
@@ -161,16 +172,32 @@ namespace sun{
     };
     
 
-    void sunsMainLoop(const int TIME, std::vector<Sun>& suns){
+    void sunsMainLoop(const int TIME, SunBank& sunbank, std::vector<Sun>& suns){
         int index = grid::getCircleClosestToMouseIndex(suns);
         for(size_t i = 0; i < suns.size(); i++){
             suns[i].mainLoop();
         }
         if(TIME % sun::Sun::DROP_COOLDOWN == 0){
-            suns[0].startClock();
+            bool oneAvailable = false;
+            for(size_t j = 0; j < suns.size(); j++){
+                if(suns[j].clock.getState() == false){
+                    oneAvailable = true;
+                    suns[j].startClock();
+                    break;
+                }
+            }
+            if(oneAvailable == false){
+                suns.emplace_back();
+                suns.back().startClock();
+            }
         }
         if(index != -1){
-            std::cout << "mouse is on " << index << '\n';
+            suns[index].resetClock();
+            sunbank.add(VALUE);
+            if(suns.size() > gameConstants::STANDARD_VECTOR_SIZE){
+                suns.erase(suns.begin() + index); 
+            }
+            std::cout << "size of vector " << suns.size() << '\n';
         }
     }
 };
@@ -179,7 +206,7 @@ namespace sun{
 void mainLoop(const int TIME, sun::SunBank& sunBank, std::vector<sun::Sun>& suns){ // ONLY CALL THIS FUNCTION
     grid::drawGrid();
     sunBank.draw();
-    sun::sunsMainLoop(TIME, suns);
+    sun::sunsMainLoop(TIME, sunBank, suns);
     if(IsKeyDown(KEY_S)){
         std::string out; 
 
