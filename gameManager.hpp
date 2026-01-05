@@ -65,8 +65,25 @@ namespace gameConstants{
 class InternalClock{
     private:
     bool state = false;
-    
+    unsigned int referenceTime = 0; // should be 0 to indicate not in use
     public:
+
+    unsigned int getReferenceTime(){
+        return referenceTime;
+    }
+
+    void setReferenceTime(unsigned int referenceTime){ // automatically sets ref time to 1 if somehow 0 is passed, use resetReferenceTime instead
+        if(referenceTime == 0){
+            this->referenceTime = 1;
+        }
+        else{
+            this->referenceTime = referenceTime;
+        }
+    }
+
+    void resetReferenceTime(){
+        referenceTime = 0;
+    }
 
     bool getState(){
         return state;
@@ -78,9 +95,8 @@ class InternalClock{
 };
 
 class Object{ 
-    private:
+    protected:
     Vector2 coords;
-    // int radius; radius should be a static variable for different classes
 
     public:
     void setx(float x){
@@ -132,7 +148,7 @@ namespace sun{
 
         public:
         InternalClock clock; 
-        static const int DROP_COOLDOWN = 1  * gameConstants::EXPECTED_FPS;// FPS
+        static const int DROP_COOLDOWN = 10  * gameConstants::EXPECTED_FPS;// FPS
         static const int DROP_SPEED = 10;
         static const int RADIUS = 16; // Dropped sun's radius, not the radius displayed in sunBank
         
@@ -174,7 +190,7 @@ namespace sun{
     };
     
 
-    void sunsMainLoop(const int TIME, SunBank& sunbank, std::vector<Sun>& suns){
+    void sunsMainLoop(const unsigned int TIME, SunBank& sunbank, std::vector<Sun>& suns){
         int index = grid::getCircleClosestToMouseIndex(suns);
         for(size_t i = 0; i < suns.size(); i++){
             suns[i].mainLoop();
@@ -205,7 +221,7 @@ namespace sun{
 };
 
 
-void mainLoop(const int TIME, sun::SunBank& sunBank, std::vector<sun::Sun>& suns){ // ONLY CALL THIS FUNCTION
+void mainLoop(const unsigned int TIME, sun::SunBank& sunBank, std::vector<sun::Sun>& suns){ // ONLY CALL THIS FUNCTION
     grid::drawGrid();
     sunBank.draw();
     sun::sunsMainLoop(TIME, sunBank, suns);

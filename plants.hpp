@@ -1,7 +1,43 @@
 #pragma once
-
 #include "gameManager.hpp"
-class Plant: public Object{
+
+class GridObject{
+    protected:
+    grid::gridPos position;
+
+    public:
+    void setPosition(grid::gridPos position){
+        this->position.column = position.column;
+        this->position.row = position.row;
+    }
+
+    void setPosition(int column, int row){
+        this->position.column = column;
+        this->position.row = row;
+    }
+
+    grid::gridPos getPosition(){
+        return position;
+    }
+
+    int getColumn(){
+        return position.column;
+    }
+
+    int getRow(){
+        return position.row;
+    }
+
+    float getx(){
+        return grid::FIRST_SQUARE_X + position.column * grid::GRID_SIZE + grid::GRID_SIZE / 2;
+    }
+
+    float gety(){
+        return grid::FIRST_SQUARE_Y + position.row * grid::GRID_SIZE + grid::GRID_SIZE / 2;
+    }
+};
+
+class Plant: public GridObject{
     protected:
     int health;
 
@@ -17,7 +53,7 @@ class Plant: public Object{
         return health;
     }
 
-    bool addHealth(int amount){ // returns 1 if health is <= 0, sets health to exactly 0
+    bool addHealth(int amount){ // returns 1 if health would be <= 0 and sets health to exactly 0
         if(health + amount <= 0){
             health = 0;
             return 1;
@@ -25,6 +61,13 @@ class Plant: public Object{
         else{
             health += amount;
             return 0;
+        }
+    }
+
+    void placePlant(const unsigned int time){
+        if(IsKeyPressed(KEY_S) && grid::insideGrid()){
+            position = grid::getMousePos();
+            clock.setReferenceTime(time);          
         }
     }
 };
@@ -36,6 +79,11 @@ class SunMaker: public Plant{
     public:
     void dropSun(){
         std::cout << getDelay() << '\n';
+    }
+
+    template <typename T>
+    void sunMakerMainLoop(const unsigned int time){
+        
     }
 };
 
