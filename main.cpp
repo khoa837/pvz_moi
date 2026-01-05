@@ -1,4 +1,5 @@
 #include "gameManager.hpp"
+#include "plants.hpp"
 
 int main () {
     const int SCREEN_WIDTH = 800;
@@ -11,6 +12,7 @@ int main () {
     int time = 0;
     sun::SunBank sunBank;
     std::vector<sun::Sun> sun(gameConstants::STANDARD_VECTOR_SIZE);
+    Sunflower sunflower(50);
     while (WindowShouldClose() == false){
         BeginDrawing();
         ClearBackground(WHITE);
