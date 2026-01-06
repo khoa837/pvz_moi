@@ -116,7 +116,7 @@ class Object{
     }
 }; 
 
-namespace sun{
+namespace MatTroi{
     const int VALUE = 50;
 
     class SunBank{
@@ -195,7 +195,7 @@ namespace sun{
         for(size_t i = 0; i < suns.size(); i++){
             suns[i].mainLoop();
         }
-        if(TIME % sun::Sun::DROP_COOLDOWN == 0){
+        if(TIME % MatTroi::Sun::DROP_COOLDOWN == 0){
             bool oneAvailable = false;
             for(size_t j = 0; j < suns.size(); j++){
                 if(suns[j].clock.getState() == false){
@@ -221,13 +221,13 @@ namespace sun{
 };
 
 
-void mainLoop(const unsigned int TIME, sun::SunBank& sunBank, std::vector<sun::Sun>& suns){ // ONLY CALL THIS FUNCTION
+void mainLoop(const unsigned int TIME, MatTroi::SunBank& sunBank, std::vector<MatTroi::Sun>& suns){ // ONLY CALL THIS FUNCTION
     grid::drawGrid();
     sunBank.draw();
-    sun::sunsMainLoop(TIME, sunBank, suns);
-    if(IsKeyDown(KEY_S)){
-        std::string out; 
+    MatTroi ::sunsMainLoop(TIME, sunBank, suns);
+    // if(IsKeyDown(KEY_S)){
+    //     std::string out; 
 
-        DrawText(out.c_str(), 500, 500, 100, RED);
-    }
+    //     DrawText(out.c_str(), 500, 500, 100, RED);
+    // }
 }

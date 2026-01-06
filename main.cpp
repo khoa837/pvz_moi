@@ -10,20 +10,20 @@ int main () {
     SetTargetFPS(gameConstants::EXPECTED_FPS);
 
     unsigned int time = 0; // might be a problem if the game runs for too long
-    sun::SunBank sunBank;
-    std::vector<sun::Sun> sun(gameConstants::STANDARD_VECTOR_SIZE);
-    Sunflower sunflower(50);
-    GridObject test;
-    test.setPosition({2, 3});
+    MatTroi::SunBank sunBank;
+    std::vector<MatTroi::Sun> sun(gameConstants::STANDARD_VECTOR_SIZE);
+    std::vector<HuongDuong::Sunflower> sunflowers(gameConstants::STANDARD_VECTOR_SIZE);
+    Texture2D sunflowerTexture = LoadTexture("texture/huongduong.png");    
     while (WindowShouldClose() == false){
         BeginDrawing();
         ClearBackground(WHITE);
         mainLoop(time, sunBank, sun);
+        HuongDuong::sunflowersMainLoop(time, sunflowers, sunBank, sunflowerTexture);
         time++;
-        DrawCircle(test.getx(), test.gety(), 40, RED);
         DrawText(std::to_string(time / 60).c_str(), 500, 500, 100, RED);
         EndDrawing();
     }
 
+    UnloadTexture(sunflowerTexture);
     CloseWindow();
 }
