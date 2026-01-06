@@ -125,18 +125,31 @@ namespace TaoMatTroi{
         
         public:
         void dropSun(){
-        std::cout << getSunDropDelay() << '\n';
+            MatTroi::throwSunFromSunMakers();
         }
     };
+
+    template <typename T>
+    void sunMakersMainLoop(const unsigned int time, std::vector<T>& sunMakers, MatTroi::SunBank& sunBank, 
+        Texture2D sunMakerTexture){
+            Cay::plantsMainLoop(time, sunMakers, sunBank, sunMakerTexture);
+            for(size_t i = 0; i < sunMakers.size(); i++){
+                if(sunMakers[i].clock.getState() && 
+                   (time - sunMakers[i].clock.getReferenceTime()) % sunMakers[0].getSunDropDelay() == 0){
+                    sunMakers[i].dropSun();
+                }              
+            }
+
+    }
 }; 
 
 namespace HuongDuong{
     class Sunflower: public TaoMatTroi::SunMaker{
-        private:
-        const static int SUN_DROP_DELAY = 15 * gameConstants::EXPECTED_FPS; 
+        public:
+        const static int SUN_DROP_DELAY = 5 * gameConstants::EXPECTED_FPS; 
         const static int SUN_VALUE = 50;
         const static int BASE_HEALTH = 100;
-        
+
         int getSunDropDelay() const override{
             return SUN_DROP_DELAY;
         }
@@ -145,7 +158,6 @@ namespace HuongDuong{
             return SUN_VALUE;
         };
         
-        public:
         Sunflower(){
             init(BASE_HEALTH);
         }
@@ -157,7 +169,7 @@ namespace HuongDuong{
 
     void sunflowersMainLoop(const unsigned int time, std::vector<Sunflower>& sunflowers, MatTroi::SunBank& sunBank,
         Texture2D sunflowerTexture){
-        Cay::plantsMainLoop(time, sunflowers, sunBank, sunflowerTexture);
+        TaoMatTroi::sunMakersMainLoop(time, sunflowers, sunBank, sunflowerTexture);
         
     }
 };

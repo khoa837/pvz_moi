@@ -130,7 +130,7 @@ namespace MatTroi{
 
     class SunBank{
         private:
-        unsigned int total = 200;
+        int total = 200;
 
         public:
         void draw(){
@@ -155,7 +155,7 @@ namespace MatTroi{
     class Sun : public Object{
         private:
         Vector2 finalCoords = {0, 0};
-
+        bool fromSky = true; // from sky or from sun makers
         public:
         InternalClock clock; 
         static const int DROP_COOLDOWN = 10  * gameConstants::EXPECTED_FPS;// FPS
@@ -184,7 +184,8 @@ namespace MatTroi{
         void mainLoop(){
             if(clock.getState()){
                 drawSun();
-                dropSun();
+                if(fromSky) dropSunFromSky();
+                else throwSunFromSunMaker();
             }
         }
         private:
@@ -192,13 +193,23 @@ namespace MatTroi{
             DrawCircle(getCoords().x, getCoords().y, RADIUS, YELLOW);
         }
         
-        void dropSun(){
+        void dropSunFromSky(){
             if(getCoords().y <= finalCoords.y){
                 sety(getCoords().y + DROP_SPEED);
             }
         }
-    };
+
+        void throwSunFromSunMaker(){ // i can set the initial position of sun to that of the sun maker, no need to pass
+            const bool right = GetRandomValue(0, 1);
+            // const int GRAVITY = 
+            if(right){
     
+            }
+            else{
+    
+            }
+        }
+    };
 
     void sunsMainLoop(const unsigned int TIME, SunBank& sunbank, std::vector<Sun>& suns){
         int index = grid::getCircleClosestToMouseIndex(suns);
@@ -227,6 +238,10 @@ namespace MatTroi{
             }
             std::cout << "size of vector " << suns.size() << '\n';
         }
+    }
+
+    void throwSunFromSunMakers(){
+
     }
 };
 
