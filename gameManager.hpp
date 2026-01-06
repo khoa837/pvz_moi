@@ -37,9 +37,16 @@ namespace grid{
         return false;
     }
     
+    int getMouseColumn(){
+        return (GetMouseX() - FIRST_SQUARE_X) / GRID_SIZE;
+    }
+    
+    int getMouseRow(){
+        return (GetMouseY() - FIRST_SQUARE_Y)/ GRID_SIZE;
+    }
+    
     gridPos getMousePos(){ // NEVER call this function alone without calling insideGrid()
-        return{(GetMouseX() - FIRST_SQUARE_X) / GRID_SIZE, (GetMouseY() - FIRST_SQUARE_Y)
-            / GRID_SIZE};
+        return{getMouseColumn(), getMouseRow()}; 
     }
 
     template <typename T>
@@ -54,7 +61,9 @@ namespace grid{
         }
         return -1;
     }
-    
+
+    bool gridPlants[ROW][COLUMN] = {false}; // will need to change the type when upgrading
+
 };
 
 namespace gameConstants{
@@ -133,7 +142,8 @@ namespace MatTroi{
             return total;
         }
 
-        bool add(int amount){ // use negative numbers for subtraction, 0 means result would be smaller than 0
+        bool add(int amount){ // use negative numbers for subtraction, 0 means result would be smaller than 0, 
+                              //if returns 0, function does NOT change the value of sunBank
         if(total + amount >= 0){
                 total += amount;
                 return 1;       

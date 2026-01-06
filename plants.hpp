@@ -43,75 +43,91 @@ class GridObject{
     }
 };
 
-class Plant: public GridObject{
-    protected:
-    virtual int getSunValue() const = 0;
+namespace Cay{
+    class Plant: public GridObject{
+        protected:
+        virtual int getSunValue() const = 0;
+        
+        public:
+        const int RADIUS = 45;
+        InternalClock clock;
+        
+        void init(unsigned int health){
+            this->health = health;
+        }
 
-    public:
-    const int RADIUS = 45;
-    InternalClock clock;
+        unsigned int getHealth(){
+            return health;
+        }
 
-    void init(unsigned int health){
-        this->health = health;
-    }
-
-    unsigned int getHealth(){
-        return health;
-    }
-
-    bool addHealth(int amount){ // returns 1 if health would be <= 0 and sets health to exactly 0
-        if(health + amount <= 0){
+        void killPlant(){
             health = 0;
-            return 1;
+            clock.resetReferenceTime();
+            clock.setState(false);
         }
-        else{
-            health += amount;
-            return 0;
-        }
-    }
 
-    void placePlant(const unsigned int time, MatTroi::SunBank& sunBank){
-        // if(sunBank.add())
-        position = grid::getMousePos();
-        clock.setReferenceTime(time);  
-        clock.setState(true);    
-        std::cout << "placed plant at " << position.column << ' ' << position.row << '\n';    
+        bool addHealth(int amount){ // returns 1 if health would be <= 0 and sets health to exactly 0
+            if(health + amount <= 0){
+                health = 0;
+                killPlant();
+                return 1;
+            }
+            else{
+                health += amount;
+                return 0;
+            }
+        }
+        
+        void placePlant(const unsigned int time, MatTroi::SunBank& sunBank){
+            if(sunBank.add(-getSunValue()) == true){
+                position = grid::getMousePos();
+                clock.setReferenceTime(time);  
+                clock.setState(true);    
+                std::cout << "placed plant at " << grid::getMouseColumn() << ' ' << grid::getMouseRow();
+            } 
+            else{
+                std::cout << "You don't have enough sun to place it";
+            }
+        }
+    };
+
+    template <typename T>
+    void plantsMainLoop(const unsigned int time, std::vector<T>& plants, MatTroi::SunBank& sunBank, 
+        Texture2D plantTexture){
+        for(size_t i = 0; i < plants.size(); i++){
+            plants[i].draw(plantTexture);
+        }
+        
+        bool oneAvailable = false;
+        using namespace grid;
+
+        if(IsKeyPressed(KEY_S) && insideGrid() && gridPlants[getMouseColumn()][getMouseRow()] == 0){
+            gridPlants[getMouseColumn()][getMouseRow()] = 1;
+            for(size_t j = 0; j < plants.size(); j++){
+                if(plants[j].clock.getState() == false){
+                    plants[j].placePlant(time, sunBank);
+                    oneAvailable = true;
+                    break;
+                }
+            }
+            if(oneAvailable == false){
+                plants.emplace_back();
+                plants.back().placePlant(time, sunBank);
+            }   
+        }
     }
 };
 
 namespace TaoMatTroi{
-    class SunMaker: public Plant{
+    class SunMaker: public Cay::Plant{
         protected:
         virtual int getSunDropDelay() const = 0;
         
         public:
         void dropSun(){
         std::cout << getSunDropDelay() << '\n';
-    }
-    
-};
-    template <typename T>
-    void sunMakersMainLoop(const unsigned int time, std::vector<T>& sunMakers, MatTroi::SunBank& sunBank, 
-        Texture2D sunMakerTexture){
-        for(size_t i = 0; i < sunMakers.size(); i++){
-            sunMakers[i].draw(sunMakerTexture);
         }
-        
-        bool oneAvailable = false;
-        if(IsKeyPressed(KEY_S) && grid::insideGrid()){
-            for(size_t j = 0; j < sunMakers.size(); j++){
-                if(sunMakers[j].clock.getState() == false){
-                    sunMakers[j].placePlant(time, sunBank);
-                    oneAvailable = true;
-                    break;
-                }
-            }
-            if(oneAvailable == false){
-                sunMakers.emplace_back();
-                sunMakers.back().placePlant(time, sunBank);
-            }   
-        }
-    }
+    };
 }; 
 
 namespace HuongDuong{
@@ -141,7 +157,7 @@ namespace HuongDuong{
 
     void sunflowersMainLoop(const unsigned int time, std::vector<Sunflower>& sunflowers, MatTroi::SunBank& sunBank,
         Texture2D sunflowerTexture){
-        TaoMatTroi::sunMakersMainLoop(time, sunflowers, sunBank, sunflowerTexture);
+        Cay::plantsMainLoop(time, sunflowers, sunBank, sunflowerTexture);
         
     }
 };
