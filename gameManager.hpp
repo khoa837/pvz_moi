@@ -64,6 +64,13 @@ namespace grid{
 
     bool gridPlants[ROW][COLUMN] = {false}; // will need to change the type when upgrading
 
+    int columnToX(int column){
+        return FIRST_SQUARE_X + column * GRID_SIZE + GRID_SIZE / 2;
+    }
+
+    int rowToY(int row){
+        return FIRST_SQUARE_Y + row * GRID_SIZE + GRID_SIZE / 2;
+    }
 };
 
 namespace gameConstants{
@@ -154,9 +161,9 @@ class Sun : public Object{
     Vector2 finalCoords = {0, 0};
     bool fromSky = true; // from sky or from sun makers
     
-    int upSpeed = 10;
-    static const int sideSpeed = 3; // only used to calculate position from throwing sun
-
+    static const int sideSpeed = 10; // only used to calculate position from throwing sun
+    static const int UP_SPEED = 10; 
+    int currentUpSpeed = UP_SPEED;
     public:
     static const int VALUE = 50;
     
@@ -182,12 +189,15 @@ class Sun : public Object{
         finalCoords.y = GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::ROW * grid::GRID_SIZE);
         setx(finalCoords.x);
         sety(-RADIUS);
-        upSpeed = 10;
+        currentUpSpeed = 10;
     }
     
     void initSunFromSunMaker(grid::gridPos sunMakerPosition){
         fromSky = false;
-        
+        coords.x = grid::columnToX(sunMakerPosition.column);
+        coords.y = grid::rowToY(sunMakerPosition.row);
+        finalCoords.x = sideSpeed * UP_SPEED * 4;
+        finalCoords.y = coords.y;
     }
     
     void mainLoop(){
@@ -197,6 +207,7 @@ class Sun : public Object{
             else throwSunFromSunMaker();
         }
     }
+
     static void startThrowingSunFromSunMaker(const unsigned int TIME, std::vector<Sun>& suns, grid::gridPos sunMakerPos){
         bool oneAvailable = false;
         for(size_t i = 0; i < suns.size(); i++){
@@ -252,12 +263,16 @@ class Sun : public Object{
     }
 
     void throwSunFromSunMaker(){ // i can set the initial position of sun to that of the sun maker, no need to pass
-        // if(getCoords().y)
-        if(clock.getReferenceTime() % 2 == 0){
-            
-        }
-        else{
-            
+        if(coords.x <= finalCoords.x){
+            // std::cout << "throwing";
+            if(clock.getReferenceTime() % 2 == 0){
+                coords.x += sideSpeed;        
+            }
+            else{
+                coords.x -= sideSpeed;
+            }
+            coords.y -= currentUpSpeed;
+            currentUpSpeed--;
         }
     }
 };
