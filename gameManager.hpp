@@ -125,98 +125,99 @@ class Object{
     }
 }; 
 
-namespace MatTroi{
-    const int VALUE = 50;
-
-    class SunBank{
-        private:
-        int total = 200;
-
-        public:
-        void draw(){
-            DrawText(std::to_string(total).c_str(), 100, 100, 63, YELLOW);
-            DrawCircle(250, 125, 40, YELLOW);
-        }
-
-        int getTotal(){
-            return total;
-        }
-
-        bool add(int amount){ // use negative numbers for subtraction, 0 means result would be smaller than 0, 
-                              //if returns 0, function does NOT change the value of sunBank
+class SunBank{
+    private:
+    int total = 200;
+    
+    public:
+    void draw(){
+        DrawText(std::to_string(total).c_str(), 100, 100, 63, YELLOW);
+        DrawCircle(250, 125, 40, YELLOW);
+    }
+    
+    int getTotal(){
+        return total;
+    }
+    
+    bool add(int amount){ // use negative numbers for subtraction, 0 means result would be smaller than 0, 
+        //if returns 0, function does NOT change the value of sunBank
         if(total + amount >= 0){
-                total += amount;
-                return 1;       
-            }
-            return 0; 
+            total += amount;
+            return 1;       
         }
-    };
+        return 0; 
+    }
+};
 
-    class Sun : public Object{
-        private:
-        Vector2 finalCoords = {0, 0};
-        bool fromSky = true; // from sky or from sun makers
-        public:
-        InternalClock clock; 
-        static const int DROP_COOLDOWN = 10  * gameConstants::EXPECTED_FPS;// FPS
-        static const int DROP_SPEED = 10;
-        static const int RADIUS = 16; // Dropped sun's radius, not the radius displayed in sunBank
-        
-        Sun(){
-            finalCoords.x = GetRandomValue(grid::FIRST_SQUARE_X, grid::FIRST_SQUARE_X + grid::COLUMN * grid::GRID_SIZE);
-            finalCoords.y = GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::ROW * grid::GRID_SIZE);
-            setx(finalCoords.x);
-            sety(-RADIUS);
-        }
-
-        void startClock(){
-            clock.setState(true);
-        }
-        
-        void resetClock(){
-            clock.setState(false);
-            finalCoords.x = GetRandomValue(grid::FIRST_SQUARE_X, grid::FIRST_SQUARE_X + grid::COLUMN * grid::GRID_SIZE);
-            finalCoords.y = GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::ROW * grid::GRID_SIZE);
-            setx(finalCoords.x);
-            sety(-RADIUS);
-        }
-
-        void mainLoop(){
-            if(clock.getState()){
-                drawSun();
-                if(fromSky) dropSunFromSky();
-                else throwSunFromSunMaker();
-            }
-        }
-        private:
-        void drawSun(){
-            DrawCircle(getCoords().x, getCoords().y, RADIUS, YELLOW);
-        }
-        
-        void dropSunFromSky(){
-            if(getCoords().y <= finalCoords.y){
-                sety(getCoords().y + DROP_SPEED);
-            }
-        }
-
-        void throwSunFromSunMaker(){ // i can set the initial position of sun to that of the sun maker, no need to pass
-            const bool right = GetRandomValue(0, 1);
-            // const int GRAVITY = 
-            if(right){
+class Sun : public Object{
+    private:
+    Vector2 finalCoords = {0, 0};
+    bool fromSky = true; // from sky or from sun makers
     
-            }
-            else{
+    int upSpeed = 10;
+    static const int sideSpeed = 3; // only used to calculate position from throwing sun
+
+    public:
+    static const int VALUE = 50;
     
+    InternalClock clock; 
+    static const int DROP_COOLDOWN = 10  * gameConstants::EXPECTED_FPS;// FPS
+    static const int DROP_SPEED = 10;
+    static const int RADIUS = 16; // Dropped sun's radius, not the radius displayed in sunBank
+    
+    Sun(){
+        finalCoords.x = GetRandomValue(grid::FIRST_SQUARE_X, grid::FIRST_SQUARE_X + grid::COLUMN * grid::GRID_SIZE);
+        finalCoords.y = GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::ROW * grid::GRID_SIZE);
+        setx(finalCoords.x);
+        sety(-RADIUS);
+    }
+    
+    void startClock(){
+        clock.setState(true);
+    }
+    
+    void resetClock(){
+        clock.setState(false);
+        finalCoords.x = GetRandomValue(grid::FIRST_SQUARE_X, grid::FIRST_SQUARE_X + grid::COLUMN * grid::GRID_SIZE);
+        finalCoords.y = GetRandomValue(grid::FIRST_SQUARE_Y, grid::FIRST_SQUARE_Y + grid::ROW * grid::GRID_SIZE);
+        setx(finalCoords.x);
+        sety(-RADIUS);
+        upSpeed = 10;
+    }
+    
+    void initSunFromSunMaker(grid::gridPos sunMakerPosition){
+        fromSky = false;
+        
+    }
+    
+    void mainLoop(){
+        if(clock.getState() == true){
+            drawSun();
+            if(fromSky) dropSunFromSky();
+            else throwSunFromSunMaker();
+        }
+    }
+    static void startThrowingSunFromSunMaker(const unsigned int TIME, std::vector<Sun>& suns, grid::gridPos sunMakerPos){
+        bool oneAvailable = false;
+        for(size_t i = 0; i < suns.size(); i++){
+            if(suns[i].clock.getState() == false){
+                suns[i].initSunFromSunMaker(sunMakerPos);
+                oneAvailable = true;
             }
         }
-    };
-
-    void sunsMainLoop(const unsigned int TIME, SunBank& sunbank, std::vector<Sun>& suns){
+        if(oneAvailable == false){
+            suns.emplace_back();
+            suns.back().initSunFromSunMaker(sunMakerPos);
+            suns.back().startClock();
+        }
+    }
+    
+    static void sunsMainLoop(const unsigned int TIME, SunBank& sunbank, std::vector<Sun>& suns){
         int index = grid::getCircleClosestToMouseIndex(suns);
         for(size_t i = 0; i < suns.size(); i++){
             suns[i].mainLoop();
         }
-        if(TIME % MatTroi::Sun::DROP_COOLDOWN == 0){
+        if(TIME % Sun::DROP_COOLDOWN == 0){
             bool oneAvailable = false;
             for(size_t j = 0; j < suns.size(); j++){
                 if(suns[j].clock.getState() == false){
@@ -232,24 +233,40 @@ namespace MatTroi{
         }
         if(index != -1){
             suns[index].resetClock();
-            sunbank.add(VALUE);
+            sunbank.add(Sun::VALUE);
             if(suns.size() > gameConstants::STANDARD_VECTOR_SIZE){
                 suns.erase(suns.begin() + index); 
             }
-            std::cout << "size of vector " << suns.size() << '\n';
         }
     }
 
-    void throwSunFromSunMakers(){
+    private:
+        void drawSun(){
+        DrawCircle(getCoords().x, getCoords().y, RADIUS, YELLOW);
+    }
+    
+    void dropSunFromSky(){
+        if(getCoords().y <= finalCoords.y){
+            sety(getCoords().y + DROP_SPEED);
+        }
+    }
 
+    void throwSunFromSunMaker(){ // i can set the initial position of sun to that of the sun maker, no need to pass
+        // if(getCoords().y)
+        if(clock.getReferenceTime() % 2 == 0){
+            
+        }
+        else{
+            
+        }
     }
 };
 
 
-void mainLoop(const unsigned int TIME, MatTroi::SunBank& sunBank, std::vector<MatTroi::Sun>& suns){ // ONLY CALL THIS FUNCTION
+void mainLoop(const unsigned int TIME, SunBank& sunBank, std::vector<Sun>& suns){ // ONLY CALL THIS FUNCTION
     grid::drawGrid();
     sunBank.draw();
-    MatTroi ::sunsMainLoop(TIME, sunBank, suns);
+    Sun::sunsMainLoop(TIME, sunBank, suns);
     // if(IsKeyDown(KEY_S)){
     //     std::string out; 
 
