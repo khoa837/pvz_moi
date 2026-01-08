@@ -97,7 +97,7 @@ class InternalClock{
         }
     }
 
-    void resetReferenceTime(){
+    void resetReferenceTime(){ // referenceTime = 0 to indicate not in use
         referenceTime = 0;
     }
 

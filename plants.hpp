@@ -5,6 +5,8 @@ class GridObject{
     protected:
     grid::gridPos position;
     unsigned int health;
+
+    constexpr static grid::gridPos UNUSED_POSITION = {-10, -10};
     
     public:
     void draw(Texture2D texture){
@@ -39,7 +41,8 @@ class GridObject{
 class Plant: public GridObject{
     protected:
     virtual int getSunValue() const = 0;
-    
+    static const int KILL_DAMAGE = 9999;
+
     public:
     const int RADIUS = 45;
     InternalClock clock;
@@ -53,12 +56,13 @@ class Plant: public GridObject{
         
         bool oneAvailable = false;
         using namespace grid;
-        if(IsKeyPressed(KEY_S) && insideGrid() && gridPlants[getMouseColumn()][getMouseRow()] == 0
+        grid::gridPos mousePos = {getMouseColumn(), getMouseRow()};
+        if(IsKeyPressed(KEY_S) && insideGrid() && gridPlants[mousePos.column][mousePos.row] == 0
         && sunBank.add(-plants[0].getSunValue()) == 1){ 
             gridPlants[getMouseColumn()][getMouseRow()] = 1;
-            for(size_t j = 0; j < plants.size(); j++){
-                if(plants[j].clock.getState() == false){
-                    plants[j].placePlant(time, sunBank);
+            for(size_t i = 0; i < plants.size(); i++){
+                if(plants[i].clock.getState() == false){
+                    plants[i].placePlant(time, sunBank);
                     oneAvailable = true;
                     break;
                 }
@@ -67,6 +71,15 @@ class Plant: public GridObject{
                 plants.emplace_back();
                 plants.back().placePlant(time, sunBank);
             }   
+        }
+
+        if(IsKeyPressed(KEY_X) && insideGrid() && gridPlants[mousePos.column][mousePos.row] == 1){
+            for(size_t i = 0; i < plants.size(); i++){
+                if(plants[i].getPosition().column == mousePos.column && plants[i].getPosition().row == mousePos.row){
+                    plants[i].killPlant();
+                    break;
+                }
+            }
         }
     }
     
@@ -82,6 +95,7 @@ class Plant: public GridObject{
         health = 0;
         clock.resetReferenceTime();
         clock.setState(false);
+        position = UNUSED_POSITION;
     }
 
     bool addHealth(int amount){ // returns 1 if health would be <= 0 and sets health to exactly 0
