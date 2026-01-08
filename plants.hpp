@@ -156,14 +156,9 @@ class Sunflower: public SunMaker{
     Sunflower(){
         init(BASE_HEALTH);
     }
-    
-    void SunflowersMainLoop(){
-        
-    }
 
     static void sunflowersMainLoop(const unsigned int time, std::vector<Sunflower>& sunflowers, SunBank& sunBank,
         std::vector<Sun>& suns, Texture2D sunflowerTexture){
         SunMaker::sunMakersMainLoop(time, sunflowers, sunBank, suns, sunflowerTexture);
-        
     }
 };

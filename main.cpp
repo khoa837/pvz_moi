@@ -1,5 +1,6 @@
 #include "gameManager.hpp"
 #include "plants.hpp"
+#include "zombie.hpp"
 
 int main () {
     const int SCREEN_WIDTH = 800;
@@ -13,13 +14,17 @@ int main () {
     SunBank sunBank;
     std::vector<Sun> suns(gameConstants::STANDARD_VECTOR_SIZE);
     std::vector<Sunflower> sunflowers(gameConstants::STANDARD_VECTOR_SIZE);
+    std::vector<BasicZombie> zombies(gameConstants::STANDARD_VECTOR_SIZE, BasicZombie(0));
+
     Texture2D sunflowerTexture = LoadTexture("texture/huongduong.png");    
     while (WindowShouldClose() == false){
         BeginDrawing();
         ClearBackground(WHITE);
         Sunflower::sunflowersMainLoop(time, sunflowers, sunBank, suns, sunflowerTexture);
+        Zombie::zombiesMainLoop(zombies);
         mainLoop(time, sunBank, suns);
         time++;
+        std::cout << GetScreenWidth() << ' ' << GetScreenHeight() << '\n';
         DrawText(std::to_string(time / 60).c_str(), 500, 500, 100, RED);
         EndDrawing();
     }

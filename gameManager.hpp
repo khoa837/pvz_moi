@@ -75,7 +75,9 @@ namespace grid{
 
 namespace gameConstants{
     const int EXPECTED_FPS = 60;
-    const int STANDARD_VECTOR_SIZE = 1;
+    const int STANDARD_VECTOR_SIZE = 10;
+    const int MAX_SCREEN_WIDTH = 1920;
+    const int MAX_SCREEN_HEIGHT = 1046;
 };
 
 class InternalClock{
