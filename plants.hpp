@@ -8,8 +8,8 @@ class GridObject{
     
     public:
     void draw(Texture2D texture){
-        DrawTexture(texture, grid::FIRST_SQUARE_X + grid::GRID_SIZE * position.column, 
-        grid::FIRST_SQUARE_Y + grid::GRID_SIZE * position.row, WHITE);
+        DrawTexture(texture, grid::columnToX(position.column) - grid::GRID_SIZE / 2, 
+        grid::rowToY(position.row) - grid::GRID_SIZE / 2, WHITE);
     } 
 
     void setPosition(grid::gridPos position){
@@ -32,14 +32,6 @@ class GridObject{
 
     int getRow(){
         return position.row;
-    }
-
-    int getx(){
-        return grid::FIRST_SQUARE_X + position.column * grid::GRID_SIZE + grid::GRID_SIZE / 2;
-    }
-
-    int gety(){
-        return grid::FIRST_SQUARE_Y + position.row * grid::GRID_SIZE + grid::GRID_SIZE / 2;
     }
 };
 
@@ -104,11 +96,10 @@ class Plant: public GridObject{
         }
     }
     
-    void placePlant(const unsigned int time, SunBank& sunBank){ // returns 1 if successful, 0 if not
+    void placePlant(const unsigned int time, SunBank& sunBank){ 
         position = grid::getMousePos();
         clock.setReferenceTime(time);  
         clock.setState(true);    
-        std::cout << "placed plant at " << grid::getMouseColumn() << ' ' << grid::getMouseRow();
     }
 };
 
@@ -123,7 +114,7 @@ class SunMaker: public Plant{
         std::vector<Sun>& suns, Texture2D sunMakerTexture){
             Plant::plantsMainLoop(time, sunMakers, sunBank, sunMakerTexture);
             for(size_t i = 0; i < sunMakers.size(); i++){
-                if(sunMakers[i].clock.getState() && 
+                if(sunMakers[i].clock.getState() && time != sunMakers[i].clock.getReferenceTime() &&
                     (time - sunMakers[i].clock.getReferenceTime()) % sunMakers[0].getSunDropDelay() == 0){
                     Sun::startThrowingSunFromSunMaker(time, suns, sunMakers[i].getPosition());
                 }              

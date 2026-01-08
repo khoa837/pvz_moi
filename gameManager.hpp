@@ -194,9 +194,10 @@ class Sun : public Object{
     
     void initSunFromSunMaker(grid::gridPos sunMakerPosition){
         fromSky = false;
+        clock.setState(true);
         coords.x = grid::columnToX(sunMakerPosition.column);
         coords.y = grid::rowToY(sunMakerPosition.row);
-        finalCoords.x = sideSpeed * UP_SPEED * 4;
+        finalCoords.x = coords.x + sideSpeed * UP_SPEED * 2;
         finalCoords.y = coords.y;
     }
     
@@ -219,7 +220,6 @@ class Sun : public Object{
         if(oneAvailable == false){
             suns.emplace_back();
             suns.back().initSunFromSunMaker(sunMakerPos);
-            suns.back().startClock();
         }
     }
     
@@ -228,7 +228,7 @@ class Sun : public Object{
         for(size_t i = 0; i < suns.size(); i++){
             suns[i].mainLoop();
         }
-        if(TIME % Sun::DROP_COOLDOWN == 0){
+        if(TIME != 0 && TIME % Sun::DROP_COOLDOWN == 0){
             bool oneAvailable = false;
             for(size_t j = 0; j < suns.size(); j++){
                 if(suns[j].clock.getState() == false){
@@ -262,9 +262,8 @@ class Sun : public Object{
         }
     }
 
-    void throwSunFromSunMaker(){ // i can set the initial position of sun to that of the sun maker, no need to pass
+    void throwSunFromSunMaker(){
         if(coords.x <= finalCoords.x){
-            // std::cout << "throwing";
             if(clock.getReferenceTime() % 2 == 0){
                 coords.x += sideSpeed;        
             }
